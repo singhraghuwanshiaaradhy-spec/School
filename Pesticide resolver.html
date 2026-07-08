@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoRemedy Pro - High-Capacity Scale</title>
+    <style>
+        :root {
+            --primary: #1b5e20;
+            --primary-light: #4caf50;
+            --bg: #f5f7f6;
+            --card: #ffffff;
+            --text: #2c3e50;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .dashboard {
+            max-width: 800px;
+            width: 100%;
+            background: var(--card);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        h1 { color: var(--primary); text-align: center; margin-top:0; }
+        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+        @media(max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: var(--primary); font-size: 13px; text-transform: uppercase;}
+        select, input { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        button { width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #0c3d0e; }
+        .result { margin-top: 25px; padding: 20px; border-radius: 8px; display: none; border-left: 6px solid #ccc; }
+        .result.safe { background: #e8f5e9; border-color: #4caf50; }
+        .result.action { background: #fff3e0; border-color: #ff9800; }
+        .notes { margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 14px; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <h1>EcoRemedy Database Portal</h1>
+    <p class="subtitle">High-Capacity Environmental Remediation Registry</p>
+
+    <div class="grid">
+        <div>
+            <label for="pesticideSelect">Search Registry (100+ Capacity)</label>
+            <select id="pesticideSelect">
+                </select>
+        </div>
+        <div>
+            <label for="phInput">Active Sensor pH Reading</label>
+            <input type="number" id="phInput" step="0.1" min="0" max="14" placeholder="e.g. 7.4">
+        </div>
+    </div>
+
+    <button onclick="analyzeChemical()">Query Registry & Analyze</button>
+
+    <div id="resultBox" class="result">
+        <h3 id="resultTitle">Analysis Status</h3>
+        <p id="resultBody"></p>
+        <div id="resultNotes" class="notes"></div>
+    </div>
+</div>
+
+<script>
+    // Professional scalable data registry array
+    const pesticideRegistry = [
+        { id: "malathion", name: "Malathion (Organophosphate)", targetPh: 8.5, agent: "Sodium Bicarbonate", notes: "Breaks down rapidly via alkaline hydrolysis above pH 8.5." },
+        { id: "carbaryl", name: "Carbaryl (Carbamate)", targetPh: 9.0, agent: "Calcium Hydroxide (Lime)", notes: "Highly unstable in alkaline solutions; half-life drops to hours at pH 9." },
+        { id: "captan", name: "Captan (Fungicide)", targetPh: 8.0, agent: "Potassium Carbonate", notes: "Unstable in neutral to alkaline water environments." },
+        { id: "chlorpyrifos", name: "Chlorpyrifos (Organophosphate)", targetPh: 8.5, agent: "Sodium Carbonate", notes: "Rate of hydrolysis increases significantly in alkaline solutions." },
+        { id: "diazinon", name: "Diazinon (Organophosphate)", targetPh: 9.0, agent: "Calcium Hydroxide", notes: "Degrades in highly alkaline solutions, though more slowly than other organophosphates." },
+        { id: "dimethoate", name: "Dimethoate (Organophosphate)", targetPh: 9.0, agent: "Sodium Hydroxide", notes: "Hydrolyzes rapidly in alkaline media; relatively stable in acidic conditions." },
+        { id: "methomyl", name: "Methomyl (Carbamate)", targetPh: 8.5, agent: "Sodium Bicarbonate", notes: "Remains stable in acidic water but breaks down as alkalinity rises past neutral." },
+        { id: "propoxur", name: "Propoxur (Carbamate)", targetPh: 9.5, agent: "Potassium Hydroxide", notes: "Requires higher alkaline thresholds for effective chemical breakdown." },
+        { id: "imidacloprid", name: "Imidacloprid (Neonicotinoid)", targetPh: 9.0, agent: "Alkaline Buffer Solution", notes: "Hydrolysis is slow at neutral levels but accelerates significantly in basic solutions above pH 9." },
+        { id: "thiamethoxam", name: "Thiamethoxam (Neonicotinoid)", targetPh: 8.5, agent: "Sodium Carbonate", notes: "Breaks down progressively faster as the system moves into an alkaline state." },
+        { id: "permethrin", name: "Permethrin (Pyrethroid)", targetPh: 8.0, agent: "Mild Alkaline Wash", notes: "Subject to steady degradation under basic aquatic environments." },
+        { id: "cypermethrin", name: "Cypermethrin (Pyrethroid)", targetPh: 9.0, agent: "Calcium Hydroxide", notes: "Hydrolyzes efficiently at higher pH levels; stable in acidic runoff." },
+        { id: "glyphosate", name: "Glyphosate (Herbicide)", targetPh: 7.0, agent: "Complexation / Carbon Media", notes: "Highly stable chemical structure; standard pH shifting is usually inefficient compared to filtration treatments." }
+        // To scale to 100, simply continue pasting new lines here using this exact format!
+    ];
+
+    // AUTOMATION: This function runs immediately when the page opens to load the database list
+    window.onload = function() {
+        const selectElement = document.getElementById("pesticideSelect");
+        
+        // Sort registry alphabetically by name
+        pesticideRegistry.sort((a, b) => a.name.localeCompare(b.name));
+
+        // Generate the dropdown elements automatically
+        pesticideRegistry.forEach(item => {
+            let option = document.createElement("option");
+            option.value = item.id;
+            option.textContent = item.name;
+            selectElement.appendChild(option);
+        });
+    };
+
+    function analyzeChemical() {
+        const selectedId = document.getElementById("pesticideSelect").value;
+        const currentPh = parseFloat(document.getElementById("phInput").value);
+        const resultBox = document.getElementById("resultBox");
+
+        if (isNaN(currentPh) || currentPh < 0 || currentPh > 14) {
+            alert("Please input a valid environmental pH value (0 - 14).");
+            return;
+        }
+
+        // Find the matching chemical details in our list
+        const selectedChemical = pesticideRegistry.find(item => item.id === selectedId);
+
+        resultBox.style.display = "block";
+        
+        if (currentPh >= selectedChemical.targetPh) {
+            resultBox.className = "result safe";
+            document.getElementById("resultTitle").innerText = "Status: Degradation Environment Active";
+            document.getElementById("resultBody").innerHTML = `Current pH (<strong>${currentPh}</strong>) matches or exceeds target threshold of <strong>${selectedChemical.targetPh}</strong>. The solution is actively degrading.`;
+        } else {
+            resultBox.className = "result action";
+            document.getElementById("resultTitle").innerText = "Status: Compound Stable (Action Required)";
+            document.getElementById("resultBody").innerHTML = `Current pH is <strong>${currentPh}</strong>. Dose the mixture with <strong>${selectedChemical.agent}</strong> until pH shifts to <strong>${selectedChemical.targetPh}</strong>.`;
+        }
+        document.getElementById("resultNotes").innerHTML = `<strong>Chemical Profile:</strong> ${selectedChemical.notes}`;
+    }
+</script>
+
+</body>
+                             </html>
+                             
